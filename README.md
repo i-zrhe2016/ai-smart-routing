@@ -64,16 +64,32 @@
 
 ## 方案三：DeepSeek + Claude 混合路由
 
-配置文件：[deepseek-claude-routing.json](deepseek-claude-routing.json)。仅使用两个模型，DeepSeek 负责常规执行，Claude 负责关键判断与复杂任务。
+配置文件：[deepseek-claude-routing.json](deepseek-claude-routing.json)。只使用两个模型，按任务目标而非笼统的复杂度分类：Claude 决策与审查，DeepSeek 执行与信息提取。
 
-| 任务 | 模型 | 推理强度 |
+| 角色 | 判断边界 | 模型 |
 | --- | --- | --- |
-| 代码阅读、信息提取、简单文档 | DeepSeek V4.1 Flash | Low |
-| 开发、测试、低风险运维（首选） | DeepSeek V4.1 Flash | High |
-| 需求分析、架构设计、复杂排障、审查、失败升级 | Claude Sonnet 5.5 | High |
+| Reader | 只整理已知事实，不修改系统、不做评价或新决策 | DeepSeek V4.1 Flash Low |
+| Developer | 目标与处理方案明确，验收标准可确定，低风险 | DeepSeek V4.1 Flash High |
+| Architect / Reviewer | 需要确定方案、诊断未知根因、独立审查或评估重大风险 | Claude Sonnet 5.5 High |
 
 分类器：`deepseek/deepseek-flash`。
 
-不引入 Pro、Opus 或其他模型。高风险任务优先走 Sonnet；失败升级依赖客户端提供失败上下文，配置本身不自动重试。跨供应商路由可能影响缓存命中率，敏感代码和数据须符合两个供应商的数据治理要求。
+### 分类示例
+
+| 用户意图 | 路由 |
+| --- | --- |
+| 解释现有代码、提取日志字段、从接口定义生成文档 | Flash Low |
+| 按现有设计实现登录、修复已定位的 Bug、按指定命令测试 | Flash High |
+| 设计登录系统、定位未知 Bug、审查 PR、评估生产变更 | Sonnet High |
+
+混合任务以当前尚未解决的关键判断为准：如果需要先确定方案或根因，即使最终要写代码也走 Sonnet；如果方案已明确，仅剩实现则走 Flash High。普通实现细节由 Flash High 处理，不因跨文件修改就升级模型。出现重大不确定性或高风险时优先走 Sonnet。
+
+### 社区参考
+
+- [Claude + DeepSeek 混合开发](https://www.reddit.com/r/CommandCode/comments/1xw1ev4/how_are_u_using_claude_code_deepseek_v41_flash/)：Claude 拆解任务及审查，DeepSeek 实现。
+- [DeepSeek Flash 作为 Claude 的开发子代理](https://www.reddit.com/r/DeepSeek/comments/1xkphiv/deepseek_v41_flash_as_the_coding_worker_under/)：作者报告 Opus Token 消耗降低 55%–63%；该结果涉及特定多代理工作流，不代表本配置实测收益。
+- [Flash 与 Sonnet 对比](https://www.reddit.com/r/ClaudeCode/comments/1wu05fx/compared_deepseek_flash_v41_to_sonnet_55/)：任务耗时、返工及计费方式也影响总成本。
+
+不引入 Pro、Opus 或其他模型。失败升级依赖客户端提供失败上下文，配置本身不自动重试或自动拆分规划与执行。跨供应商路由可能影响缓存命中率，敏感代码和数据须符合两个供应商的数据治理要求。
 
 参考：[DeepSeek API 文档](https://api-docs.deepseek.com/)、[Claude 模型概览](https://platform.claude.com/docs/en/models/overview)。导入前核对本地 Magpie 的供应商前缀、模型 ID 和推理档位；实际调用、分类准确率和成本收益尚未验证。
