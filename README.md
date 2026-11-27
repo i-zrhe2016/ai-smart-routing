@@ -74,15 +74,24 @@
 
 分类器：`deepseek/deepseek-flash`。
 
-### 分类示例
+### 升降级规则
 
-| 用户意图 | 路由 |
+分类器根据当前用户消息重新选择模型，不依赖历史对话、工具结果或上一轮模型。
+
+| 当前指令表达的任务状态 | 目标模型 |
 | --- | --- |
-| 解释现有代码、提取日志字段、从接口定义生成文档 | Flash Low |
-| 按现有设计实现登录、修复已定位的 Bug、按指定命令测试 | Flash High |
-| 设计登录系统、定位未知 Bug、审查 PR、评估生产变更 | Sonnet High |
+| 仅搜索、阅读、提取或整理信息 | Flash Low |
+| 只读任务转为开发、修改或执行 | Flash High |
+| 方案失败，需要重新分析；出现未知根因或重大风险 | Sonnet High |
+| 方案已确定，只需按方案实施 | Flash High |
+| 开发完成，只需整理结果 | Flash Low |
+| 意图不明确（如仅说“继续”） | Flash High（默认建议） |
 
-混合任务以当前尚未解决的关键判断为准：如果需要先确定方案或根因，即使最终要写代码也走 Sonnet；如果方案已明确，仅剩实现则走 Flash High。普通实现细节由 Flash High 处理，不因跨文件修改就升级模型。出现重大不确定性或高风险时优先走 Sonnet。
+优先级：重大风险、未知根因、明确失败或独立决策与审查 > 执行 > 纯信息处理。普通实现细节不需要升级。
+
+例如，先发“设计登录系统方案”选择 Sonnet High，再发“按已确定的方案实现”选择 Flash High；若遇到失败，发“多次修复失败，请重新分析根因”选择 Sonnet High；最后发“整理开发结果”选择 Flash Low。
+
+这些规则表达的是跨用户轮次重新分类的目标，而非自动监控、自动重试或同一轮工具调用期间的模型切换。“继续”“重试”本身不表示失败或方案已经完成。规则优先级和默认档位为分类意图提示，不是独立的硬编码控制流。
 
 ### 社区参考
 
@@ -90,6 +99,6 @@
 - [DeepSeek Flash 作为 Claude 的开发子代理](https://www.reddit.com/r/DeepSeek/comments/1xkphiv/deepseek_v41_flash_as_the_coding_worker_under/)：作者报告 Opus Token 消耗降低 55%–63%；该结果涉及特定多代理工作流，不代表本配置实测收益。
 - [Flash 与 Sonnet 对比](https://www.reddit.com/r/ClaudeCode/comments/1wu05fx/compared_deepseek_flash_v41_to_sonnet_55/)：任务耗时、返工及计费方式也影响总成本。
 
-不引入 Pro、Opus 或其他模型。失败升级依赖客户端提供失败上下文，配置本身不自动重试或自动拆分规划与执行。跨供应商路由可能影响缓存命中率，敏感代码和数据须符合两个供应商的数据治理要求。
+不引入 Pro、Opus 或其他模型。失败升级依赖当前用户消息明确表达失败状态，配置本身不自动重试或自动拆分规划与执行。跨供应商路由可能影响缓存命中率，敏感代码和数据须符合两个供应商的数据治理要求。
 
-参考：[DeepSeek API 文档](https://api-docs.deepseek.com/)、[Claude 模型概览](https://platform.claude.com/docs/en/models/overview)。导入前核对本地 Magpie 的供应商前缀、模型 ID 和推理档位；实际调用、分类准确率和成本收益尚未验证。
+参考：[Magpie 意图路由](https://usemagpie.ai/docs/zh/intent)、[DeepSeek API 文档](https://api-docs.deepseek.com/)、[Claude 模型概览](https://platform.claude.com/docs/en/models/overview)。导入前核对本地 Magpie 的供应商前缀、模型 ID 和推理档位；实际调用、分类准确率和成本收益尚未验证。
