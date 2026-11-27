@@ -43,3 +43,21 @@
 ## 兼容性
 
 本仓库是配置示例，不是独立路由程序。官方 API 支持的推理档位不等同于 Magpie 实际支持的模型 ID、分类器和导入格式；尚未在实际 Magpie 环境中验证。成本收益及分类器升级效果尚无统一实测数据。
+
+## Claude 版本
+
+配置文件：[claude-routing.json](claude-routing.json)。与原 Codex 配置独立，可按需导入。
+
+| 任务 | 模型 | 推理强度 |
+| --- | --- | --- |
+| 只读、文档 | Haiku 5.5 | Medium |
+| 简单修改、测试 | Haiku 5.5 | High |
+| 日常开发（首选） | Sonnet 5.5 | Medium |
+| 复杂开发、排障 | Sonnet 5.5 | High |
+| 规划、架构 | Opus 5.5 | Medium |
+| 深度审查、复杂重构 | Opus 5.5 | High |
+| 极复杂任务升级 | Fable 5.2 | High |
+
+分类器：`claude/claude-haiku-5-5`。
+
+模型 ID、推理档位和 Fable 可用性均需在实际 Magpie 环境核对；此配置仅通过 JSON 结构检查，未验证实际调用、分类准确率或成本收益。不支持的模型应移除并调整对应规则。参考 [Claude 官方模型文档](https://platform.claude.com/docs/en/models/overview)。
