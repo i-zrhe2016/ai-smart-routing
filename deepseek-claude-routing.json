@@ -1,0 +1,28 @@
+{
+  "magpie": "routing-group",
+  "version": 1,
+  "group": {
+    "id": "deepseek-claude-routing",
+    "name": "DeepSeek + Claude 性价比优先",
+    "members": [
+      "deepseek/deepseek-flash:high",
+      "deepseek/deepseek-flash:low",
+      "claude/claude-sonnet-5-5:high"
+    ],
+    "rules": [
+      {
+        "use": "claude/claude-sonnet-5-5:high",
+        "intent": "需求分析、问题拆解、功能规划、系统架构、复杂技术决策、疑难排障、深度代码审查、性能优化、安全及高风险生产变更方案复核，以及DeepSeek反复无法解决的任务；优先于常规执行规则"
+      },
+      {
+        "use": "deepseek/deepseek-flash:low",
+        "intent": "边界明确的低风险只读任务：代码阅读、信息提取、代码解释、简单文档生成"
+      },
+      {
+        "use": "deepseek/deepseek-flash:high",
+        "intent": "需求明确的日常功能开发、跨文件实现、代码修改、测试、部署与低风险常规运维；无法明确分类时的首选模型（高风险任务除外）"
+      }
+    ],
+    "classifier": "deepseek/deepseek-flash"
+  }
+}
