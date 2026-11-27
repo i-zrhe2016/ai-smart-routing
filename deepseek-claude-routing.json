@@ -1,0 +1,43 @@
+{
+  "magpie": "routing-group",
+  "version": 1,
+  "group": {
+    "id": "deepseek-claude-routing",
+    "name": "DeepSeek + Claude 性价比优先",
+    "members": [
+      "deepseek/deepseek-flash:high",
+      "deepseek/deepseek-flash:low",
+      "deepseek/deepseek-v4-pro:high",
+      "claude/claude-sonnet-5-5:medium",
+      "claude/claude-sonnet-5-5:high",
+      "claude/claude-opus-5-5:high"
+    ],
+    "rules": [
+      {
+        "use": "claude/claude-opus-5-5:high",
+        "intent": "核心系统架构、重大技术决策、深度安全审计、高风险生产变更方案复核、疑难故障及较低档位反复失败的任务"
+      },
+      {
+        "use": "claude/claude-sonnet-5-5:high",
+        "intent": "复杂Bug排查、性能分析、代码审查、DeepSeek无法完成的任务"
+      },
+      {
+        "use": "claude/claude-sonnet-5-5:medium",
+        "intent": "需求分析、问题拆解、功能规划、技术方案比较"
+      },
+      {
+        "use": "deepseek/deepseek-v4-pro:high",
+        "intent": "验收标准明确但实现较复杂的功能开发、跨文件修改及常规重构；不含核心架构、安全或高风险生产变更"
+      },
+      {
+        "use": "deepseek/deepseek-flash:low",
+        "intent": "边界明确的低风险只读任务：代码阅读、信息提取、解释和文档生成"
+      },
+      {
+        "use": "deepseek/deepseek-flash:high",
+        "intent": "需求明确的日常功能开发、简单代码修改、测试及低风险常规运维；无法明确分类时的首选模型（高风险任务除外）"
+      }
+    ],
+    "classifier": "deepseek/deepseek-flash"
+  }
+}
